@@ -1,140 +1,123 @@
 #include <stdio.h>
-#include <stdbool.h>
+#include <stdlib.h>
 
 #define TAM_TABULEIRO 10
-#define TAM_NAVIO 3
+#define TAM_HAB 5
 
-void inicializarTabuleiro(int tabuleiro[TAM_TABULEIRO][TAM_TABULEIRO])
-{
-    for (int i = 0; i < TAM_TABULEIRO; i++)
-    {
-        for (int j = 0; j < TAM_TABULEIRO; j++)
-        {
-            tabuleiro[i][j] = 0;
+#define AGUA 0
+#define NAVIO 3
+#define HABILIDADE 5
+
+void inicializarTabuleiro(int tabuleiro[TAM_TABULEIRO][TAM_TABULEIRO]) {
+    for (int i = 0; i < TAM_TABULEIRO; i++) {
+        for (int j = 0; j < TAM_TABULEIRO; j++) {
+            tabuleiro[i][j] = AGUA;
         }
     }
 }
 
-void exibirTabuleiro(int tabuleiro[TAM_TABULEIRO][TAM_TABULEIRO])
-{
-    printf("\n======= TABULEIRO BATALHA NAVAL =======\n\n");
-
-    for (int i = 0; i < TAM_TABULEIRO; i++)
-    {
-        for (int j = 0; j < TAM_TABULEIRO; j++)
-        {
+void exibirTabuleiro(int tabuleiro[TAM_TABULEIRO][TAM_TABULEIRO]) {
+    printf("\n======= TABULEIRO =======\n\n");
+    for (int i = 0; i < TAM_TABULEIRO; i++) {
+        for (int j = 0; j < TAM_TABULEIRO; j++) {
             printf("%d ", tabuleiro[i][j]);
         }
         printf("\n");
     }
-
-    printf("\nLegenda: 0 = Agua | 3 = Navio\n");
+    printf("\nLegenda: 0=Agua | 3=Navio | 5=Habilidade\n");
 }
 
-bool dentroLimite(int linha, int coluna)
-{
-    return (linha >= 0 && linha < TAM_TABULEIRO &&
-            coluna >= 0 && coluna < TAM_TABULEIRO);
-}
-
-bool verificaSobreposicao(int tabuleiro[TAM_TABULEIRO][TAM_TABULEIRO],
-                          int linha, int coluna)
-{
-    return tabuleiro[linha][coluna] != 0;
-}
-
-bool posicionarNavio(int tabuleiro[TAM_TABULEIRO][TAM_TABULEIRO],
-                     int linhaInicial,
-                     int colunaInicial,
-                     char tipo)
-{
-
-    int linha, coluna;
-
-    for (int i = 0; i < TAM_NAVIO; i++)
-    {
-
-        linha = linhaInicial;
-        coluna = colunaInicial;
-
-        if (tipo == 'H')
-            coluna += i;
-        else if (tipo == 'V')
-            linha += i;
-        else if (tipo == 'D')
-        {
-            linha += i;
-            coluna += i;
+void criarCone(int matriz[TAM_HAB][TAM_HAB]) {
+    for (int i = 0; i < TAM_HAB; i++) {
+        for (int j = 0; j < TAM_HAB; j++) {
+            int centro = TAM_HAB / 2;
+            if (i >= centro && abs(j - centro) <= (i - centro)) {
+                matriz[i][j] = 1;
+            } else {
+                matriz[i][j] = 0;
+            }
         }
-        else if (tipo == 'A')
-        {
-            linha += i;
-            coluna -= i;
-        }
-
-        if (!dentroLimite(linha, coluna))
-            return false;
-
-        if (verificaSobreposicao(tabuleiro, linha, coluna))
-            return false;
     }
-
-    for (int i = 0; i < TAM_NAVIO; i++)
-    {
-
-        linha = linhaInicial;
-        coluna = colunaInicial;
-
-        if (tipo == 'H')
-            coluna += i;
-        else if (tipo == 'V')
-            linha += i;
-        else if (tipo == 'D')
-        {
-            linha += i;
-            coluna += i;
-        }
-        else if (tipo == 'A')
-        {
-            linha += i;
-            coluna -= i;
-        }
-
-        tabuleiro[linha][coluna] = 3;
-    }
-
-    return true;
 }
 
-int main()
-{
+void criarCruz(int matriz[TAM_HAB][TAM_HAB]) {
+    int centro = TAM_HAB / 2;
+    for (int i = 0; i < TAM_HAB; i++) {
+        for (int j = 0; j < TAM_HAB; j++) {
+            if (i == centro || j == centro) {
+                matriz[i][j] = 1;
+            } else {
+                matriz[i][j] = 0;
+            }
+        }
+    }
+}
+
+void criarOctaedro(int matriz[TAM_HAB][TAM_HAB]) {
+    int centro = TAM_HAB / 2;
+    for (int i = 0; i < TAM_HAB; i++) {
+        for (int j = 0; j < TAM_HAB; j++) {
+            if (abs(i - centro) + abs(j - centro) <= centro) {
+                matriz[i][j] = 1;
+            } else {
+                matriz[i][j] = 0;
+            }
+        }
+    }
+}
+
+void aplicarHabilidade(
+    int tabuleiro[TAM_TABULEIRO][TAM_TABULEIRO],
+    int habilidade[TAM_HAB][TAM_HAB],
+    int origemLinha,
+    int origemColuna
+) {
+    int centro = TAM_HAB / 2;
+
+    for (int i = 0; i < TAM_HAB; i++) {
+        for (int j = 0; j < TAM_HAB; j++) {
+
+            if (habilidade[i][j] == 1) {
+                int linhaTab = origemLinha + (i - centro);
+                int colunaTab = origemColuna + (j - centro);
+
+                if (linhaTab >= 0 && linhaTab < TAM_TABULEIRO &&
+                    colunaTab >= 0 && colunaTab < TAM_TABULEIRO) {
+
+                    if (tabuleiro[linhaTab][colunaTab] == AGUA) {
+                        tabuleiro[linhaTab][colunaTab] = HABILIDADE;
+                    }
+                }
+            }
+        }
+    }
+}
+
+int main() {
 
     int tabuleiro[TAM_TABULEIRO][TAM_TABULEIRO];
 
+    int cone[TAM_HAB][TAM_HAB];
+    int cruz[TAM_HAB][TAM_HAB];
+    int octaedro[TAM_HAB][TAM_HAB];
+
     inicializarTabuleiro(tabuleiro);
-    if (!posicionarNavio(tabuleiro, 1, 1, 'H'))
-    {
-        printf("Erro ao posicionar navio horizontal.\n");
-        return 1;
-    }
 
-    if (!posicionarNavio(tabuleiro, 4, 6, 'V'))
-    {
-        printf("Erro ao posicionar navio vertical.\n");
-        return 1;
-    }
+    tabuleiro[2][2] = NAVIO;
+    tabuleiro[2][3] = NAVIO;
+    tabuleiro[2][4] = NAVIO;
 
-    if (!posicionarNavio(tabuleiro, 0, 7, 'D'))
-    {
-        printf("Erro ao posicionar navio diagonal principal.\n");
-        return 1;
-    }
+    tabuleiro[6][6] = NAVIO;
+    tabuleiro[7][6] = NAVIO;
+    tabuleiro[8][6] = NAVIO;
 
-    if (!posicionarNavio(tabuleiro, 7, 9, 'A'))
-    {
-        printf("Erro ao posicionar navio diagonal secundaria.\n");
-        return 1;
-    }
+    criarCone(cone);
+    criarCruz(cruz);
+    criarOctaedro(octaedro);
+
+    aplicarHabilidade(tabuleiro, cone, 1, 7);
+    aplicarHabilidade(tabuleiro, cruz, 5, 2);
+    aplicarHabilidade(tabuleiro, octaedro, 7, 7);
 
     exibirTabuleiro(tabuleiro);
 
